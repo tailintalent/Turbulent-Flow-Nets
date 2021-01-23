@@ -11,10 +11,10 @@ import itertools
 import re
 import random
 import time
-from model import LES
+from model_init import LES
 from torch.autograd import Variable
 from penalty import DivergenceLoss
-from train import Dataset, train_epoch, eval_epoch, test_epoch
+from train_init import Dataset, train_epoch, eval_epoch, test_epoch
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 import warnings
 warnings.filterwarnings("ignore")
@@ -25,8 +25,8 @@ warnings.filterwarnings("ignore")
 
 #train_direc = "/global/cscratch1/sd/rwang2/TF-net/Data/data_64/sample_"
 #test_direc = "/global/cscratch1/sd/rwang2/TF-net/Data/data_64/sample_"
-train_direc = './TF-net/Data/'
-test_direc = './TF-net/Data/'
+train_direc = './TF_net/Data/'
+test_direc = './TF_net/Data/'
 
 #best_params: kernel_size 3, learning_rate 0.001, dropout_rate 0, batch_size 120, input_length 25, output_length 4
 min_mse = 1
