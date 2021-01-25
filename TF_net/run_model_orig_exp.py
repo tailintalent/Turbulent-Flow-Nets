@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 from torch.utils import data
 import itertools
+import argparse
 import re
 import random
 import time
@@ -19,6 +20,11 @@ from train_orig_exp import Dataset, train_epoch, eval_epoch, test_epoch
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 import warnings
 warnings.filterwarnings("ignore")
+
+parser = argparse.ArgumentParser(description='Runs training on (attempt) original experiment from paper')
+parser.add_argument('--model_name', type=str, dest='model_name', default='model', help='file name to save model checkpoint')
+parser.add_argument('--result_name', type=str, dest='result_name', default='result', help='file name to save results')
+args = parser.parse_args()
 
 # need to do the data processing of the raw turbulent velocity flows ourself
 # The paper used 1500 images, generating 7 squares of 256x256 from each, downsampled to 64x64 images
@@ -40,13 +46,13 @@ kernel_size = 3
 batch_size = 32
 
 #train_indices = list(range(0, 6000))
-train_indices = list(range(0, 1000))
+train_indices = list(range(0, 1200))
 #train_indices = [1]
 #valid_indices = list(range(6000, 7700))
-valid_indices = list(range(1000, 1200))
+valid_indices = list(range(1200, 1500))
 #valid_indices = [2]
 #test_indices = [3]
-test_indices = list(range(1200, 1400))
+test_indices = list(range(1500, 1860))
 #test_indices = list(range(7700, 9800))
 
 model = LES(input_channels = input_length*2, output_channels = 2, kernel_size = kernel_size, 
@@ -85,7 +91,7 @@ for i in tqdm(range(100)):
     if valid_mse[-1] < min_mse:
         min_mse = valid_mse[-1] 
         best_model = model 
-        torch.save(best_model, "orig_exp_model.pth")
+        torch.save(best_model, "./checkpoints/{args.model_name}.pth")
         save = True
     end = time.time()
     if (len(train_mse) > 50 and np.mean(valid_mse[-5:]) >= np.mean(valid_mse[-10:-5])):
@@ -94,10 +100,10 @@ for i in tqdm(range(100)):
 print(time_range, min_mse)
 
 if not save:
-    torch.save(model, "orig_exp_model.pth")
+    torch.save(model, "./checkpoints/{args.model_name}.pth")
 
 loss_fun = torch.nn.MSELoss()
-best_model = torch.load("orig_exp_model.pth")
+best_model = torch.load("./{args.model_name}.pth")
 test_set = Dataset(test_indices, input_length + time_range - 1, 40, 60, test_direc, True)
 test_loader = data.DataLoader(test_set, batch_size = batch_size, shuffle = False, num_workers = 8)
 preds, trues, loss_curve = test_epoch(test_loader, best_model, loss_fun)
@@ -105,4 +111,4 @@ preds, trues, loss_curve = test_epoch(test_loader, best_model, loss_fun)
 torch.save({"preds": preds,
             "trues": trues,
             "loss_curve": loss_curve}, 
-            "results.pt")
+            "./Evaluation/{args.result_name}.pt")

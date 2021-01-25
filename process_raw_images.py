@@ -73,7 +73,7 @@ else:
     # Keep track of the downsampled images
     images = []
     for i in tqdm(range(args.start, args.end+1)):
-        print(f'On image: {i}')
+        #print(f'On image: {i}')
         img = full[i:i+1, :, :, :]
         num_regions = int(img.shape[-1] / region_shape)
         regions = []
@@ -104,7 +104,9 @@ else:
     print('number of stacked images: ', num_images)
     idx = 0
     for j in tqdm(range(num_images)):
-       print(f'stacking index: {idx}')
+       #print(f'stacking index: {idx}')
+       if len(images) - (idx+args.stack_size) < 0:
+           break
        assert(len(images[idx:idx+args.stack_size]) == args.stack_size) 
        result = torch.cat(images[idx:idx+args.stack_size], dim=0)
        assert(result.shape[0] == args.stack_size)
