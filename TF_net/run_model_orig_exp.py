@@ -12,22 +12,22 @@ import re
 import random
 import time
 from tqdm import tqdm
-from model_init import LES
+from model import LES
 from torch.autograd import Variable
 from penalty import DivergenceLoss
-from train_init import Dataset, train_epoch, eval_epoch, test_epoch
+from train_orig_exp import Dataset, train_epoch, eval_epoch, test_epoch
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 import warnings
 warnings.filterwarnings("ignore")
 
-# TODO: need to do the data processing of the raw turbulent velocity flows ourself
+# need to do the data processing of the raw turbulent velocity flows ourself
 # The paper used 1500 images, generating 7 squares of 256x256 from each, downsampled to 64x64 images
-# TODO: Use sliding window to do this processing first. Currently we only have the raw data
+# Use sliding window to do this processing first. Currently we only have the raw data
 
 #train_direc = "/global/cscratch1/sd/rwang2/TF-net/Data/data_64/sample_"
 #test_direc = "/global/cscratch1/sd/rwang2/TF-net/Data/data_64/sample_"
-train_direc = './TF_net/Data/'
-test_direc = './TF_net/Data/'
+train_direc = './TF_net/Data/stacked/'
+test_direc = './TF_net/Data/stacked/'
 
 #best_params: kernel_size 3, learning_rate 0.001, dropout_rate 0, batch_size 120, input_length 25, output_length 4
 min_mse = 1
@@ -40,13 +40,13 @@ kernel_size = 3
 batch_size = 32
 
 #train_indices = list(range(0, 6000))
-#train_indices = list(range(0, 1300))
-train_indices = [1]
+train_indices = list(range(0, 1000))
+#train_indices = [1]
 #valid_indices = list(range(6000, 7700))
-#valid_indices = list(range(1300, 1900))
-valid_indices = [2]
-test_indices = [3]
-#test_indices = list(range(1900, 2000))
+valid_indices = list(range(1000, 1200))
+#valid_indices = [2]
+#test_indices = [3]
+test_indices = list(range(1200, 1400))
 #test_indices = list(range(7700, 9800))
 
 model = LES(input_channels = input_length*2, output_channels = 2, kernel_size = kernel_size, 
@@ -59,7 +59,7 @@ train_set = Dataset(train_indices, input_length + time_range - 1, 40, output_len
 valid_set = Dataset(valid_indices, input_length + time_range - 1, 40, 6, test_direc, True)
 train_loader = data.DataLoader(train_set, batch_size = batch_size, shuffle = True, num_workers = 8)
 valid_loader = data.DataLoader(valid_set, batch_size = batch_size, shuffle = False, num_workers = 8)
-#print(f'size of dataset: {train_set[0]}')
+#print(f'size of dataset example: {train_set[0].size()}')
 
 loss_fun = torch.nn.MSELoss()
 regularizer = DivergenceLoss(torch.nn.MSELoss())
@@ -85,7 +85,7 @@ for i in tqdm(range(100)):
     if valid_mse[-1] < min_mse:
         min_mse = valid_mse[-1] 
         best_model = model 
-        torch.save(best_model, "model.pth")
+        torch.save(best_model, "orig_exp_model.pth")
         save = True
     end = time.time()
     if (len(train_mse) > 50 and np.mean(valid_mse[-5:]) >= np.mean(valid_mse[-10:-5])):
@@ -94,10 +94,10 @@ for i in tqdm(range(100)):
 print(time_range, min_mse)
 
 if not save:
-    torch.save(model, "model.pth")
+    torch.save(model, "orig_exp_model.pth")
 
 loss_fun = torch.nn.MSELoss()
-best_model = torch.load("model.pth")
+best_model = torch.load("orig_exp_model.pth")
 test_set = Dataset(test_indices, input_length + time_range - 1, 40, 60, test_direc, True)
 test_loader = data.DataLoader(test_set, batch_size = batch_size, shuffle = False, num_workers = 8)
 preds, trues, loss_curve = test_epoch(test_loader, best_model, loss_fun)

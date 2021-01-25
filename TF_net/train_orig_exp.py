@@ -31,9 +31,9 @@ class Dataset(data.Dataset):
     def __getitem__(self, index):
         ID = self.list_IDs[index]
         try:
-            loaded_tensor = torch.load(self.direc + f"rbc_data{ID}.pt")
+            loaded_tensor = torch.load(self.direc + f"stacked_{ID}.pt")
         except Exception as ex:
-            print("There's an exception occurring when loading {}: {}".format(f'rbc_data{ID}.pt', str(ex)))
+            print("There's an exception occurring when loading {}: {}".format(f'stacked_{ID}.pt', str(ex)))
         y = loaded_tensor[self.mid:(self.mid+self.output_length)]
         if self.stack_x:
             #x = torch.load(self.direc + str(ID) + ".pt")[(self.mid-self.input_length):self.mid].reshape(-1, y.shape[-2], y.shape[-1])
@@ -43,7 +43,6 @@ class Dataset(data.Dataset):
             x = loaded_tensor[(self.mid-self.input_length):self.mid]
         #y = torch.load(self.direc + str(ID) + ".pt")[self.mid:(self.mid+self.output_length)]
         #y = torch.load(self.direc + "rbc_data.pt")[self.mid:(self.mid+self.output_length)]
-        print(f'Shape of x: {x.shape}, shape of y: {y.shape}')
         return x.float(), y.float()
     
 def train_epoch(train_loader, model, optimizer, loss_function, coef = 0, regularizer = None):
@@ -53,8 +52,8 @@ def train_epoch(train_loader, model, optimizer, loss_function, coef = 0, regular
         ims = []
         xx = xx.to(device)
         yy = yy.to(device)
-        print('xx shape: ', xx.shape)
-        print('yy shape after transpose: ', yy.transpose(0,1).shape) 
+        #print('xx shape: ', xx.shape)
+        #print('yy shape after transpose: ', yy.transpose(0,1).shape) 
         for y in yy.transpose(0,1):
             im = model(xx)
             xx = torch.cat([xx[:, 2:], im], 1)
