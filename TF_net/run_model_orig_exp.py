@@ -91,7 +91,7 @@ for i in tqdm(range(100)):
     if valid_mse[-1] < min_mse:
         min_mse = valid_mse[-1] 
         best_model = model 
-        torch.save(best_model, "./checkpoints/{args.model_name}.pth")
+        torch.save(best_model, f"./checkpoints/{args.model_name}.pth")
         save = True
     end = time.time()
     if (len(train_mse) > 50 and np.mean(valid_mse[-5:]) >= np.mean(valid_mse[-10:-5])):
@@ -100,10 +100,10 @@ for i in tqdm(range(100)):
 print(time_range, min_mse)
 
 if not save:
-    torch.save(model, "./checkpoints/{args.model_name}.pth")
+    torch.save(model, f"./checkpoints/{args.model_name}.pth")
 
 loss_fun = torch.nn.MSELoss()
-best_model = torch.load("./{args.model_name}.pth")
+best_model = torch.load(f"./checkpoints/{args.model_name}.pth")
 test_set = Dataset(test_indices, input_length + time_range - 1, 40, 60, test_direc, True)
 test_loader = data.DataLoader(test_set, batch_size = batch_size, shuffle = False, num_workers = 8)
 preds, trues, loss_curve = test_epoch(test_loader, best_model, loss_fun)
@@ -111,4 +111,4 @@ preds, trues, loss_curve = test_epoch(test_loader, best_model, loss_fun)
 torch.save({"preds": preds,
             "trues": trues,
             "loss_curve": loss_curve}, 
-            "./Evaluation/{args.result_name}.pt")
+            f"./Evaluation/{args.result_name}.pt")
