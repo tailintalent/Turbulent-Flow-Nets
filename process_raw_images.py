@@ -100,6 +100,7 @@ else:
                 row_idx += downsample_shape
 
     # After splicing all the images, start stacking them
+    # Pass in cv2? for downsample maybe
     num_images = int(len(images) / args.stack_size)
     print('number of stacked images: ', num_images)
     idx = 0

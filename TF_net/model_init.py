@@ -52,6 +52,7 @@ class Encoder(nn.Module):
 class LES(nn.Module):
     def __init__(self, input_channels, output_channels, kernel_size, dropout_rate, time_range):
         super(LES, self).__init__()
+        # kernel_size(3,1) and padding to (1,0)
         self.spatial_filter = nn.Conv2d(1, 1, kernel_size = 3, padding = 1, bias = False)   
         self.temporal_filter = nn.Conv2d(time_range, 1, kernel_size = 1, padding = 0, bias = False)
         self.input_channels = input_channels
