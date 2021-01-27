@@ -72,20 +72,24 @@ class LES(nn.Module):
         # Currently, karman-2d xx has shape torch.Size([32, 1, 256, 128, 6, 2])
         # For reference, yy has shape torch.Size([32, 32768, 4, 2])
         # TODO: reshape this accordingly
+        print(f'in forward,  xx shape: {xx.shape}')
         xx_len = xx.shape[1]
         # u = u_mean + u_tilde + u_prime
-        u_tilde = self.spatial_filter(xx.reshape(xx.shape[0]*xx.shape[1], 1, 64, 64)).reshape(xx.shape[0], xx.shape[1], 64, 64)
+        u_tilde = self.spatial_filter(xx.reshape(xx.shape[0]*xx.shape[1], 1, 6, 2)).reshape(xx.shape[0], xx.shape[1], 6, 2)
+        #u_tilde = self.spatial_filter(xx.reshape(xx.shape[0]*xx.shape[1], 1, 64, 64)).reshape(xx.shape[0], xx.shape[1], 64, 64)
         # u_prime
         u_prime = (xx - u_tilde)[:,(xx_len - self.input_channels):]
         # u_mean
-        u_tilde2 = u_tilde.reshape(u_tilde.shape[0], u_tilde.shape[1]//2, 2, 64, 64)
+        u_tilde2 = u_tilde.reshape(u_tilde.shape[0], u_tilde.shape[1]//2, 2, 6, 2)
+        #u_tilde2 = u_tilde.reshape(u_tilde.shape[0], u_tilde.shape[1]//2, 2, 64, 64)
         u_mean = []
         for i in range(xx_len//2 - self.input_channels//2, xx_len//2):
             cur_mean = torch.cat([self.temporal_filter(u_tilde2[:,i-self.time_range+1:i+1,0,:,:]).unsqueeze(2), 
                                   self.temporal_filter(u_tilde2[:,i-self.time_range+1:i+1,1,:,:]).unsqueeze(2)], dim = 2)
             u_mean.append(cur_mean)
         u_mean = torch.cat(u_mean, dim = 1)
-        u_mean = u_mean.reshape(u_mean.shape[0], -1, 64, 64)
+        u_mean = u_mean.reshape(u_mean.shape[0], -1, 6, 2)
+        #u_mean = u_mean.reshape(u_mean.shape[0], -1, 64, 64)
         # u_tilde
         u_tilde = u_tilde[:,(self.time_range-1)*2:] - u_mean
         out_conv1_mean, out_conv2_mean, out_conv3_mean, out_conv4_mean = self.encoder1(u_mean)
