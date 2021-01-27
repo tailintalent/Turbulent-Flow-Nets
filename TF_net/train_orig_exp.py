@@ -11,7 +11,7 @@ import re
 import random
 import time
 from torch.autograd import Variable
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+#device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 import warnings
 import kornia
 warnings.filterwarnings("ignore")
@@ -31,9 +31,9 @@ class Dataset(data.Dataset):
     def __getitem__(self, index):
         ID = self.list_IDs[index]
         try:
-            loaded_tensor = torch.load(self.direc + f"stacked_{ID}.pt")
+            loaded_tensor = torch.load(self.direc + f"samples_{ID}.pt")
         except Exception as ex:
-            print("There's an exception occurring when loading {}: {}".format(f'stacked_{ID}.pt', str(ex)))
+            print("There's an exception occurring when loading {}: {}".format(f'samples_{ID}.pt', str(ex)))
         y = loaded_tensor[self.mid:(self.mid+self.output_length)]
         if self.stack_x:
             #x = torch.load(self.direc + str(ID) + ".pt")[(self.mid-self.input_length):self.mid].reshape(-1, y.shape[-2], y.shape[-1])
@@ -45,7 +45,7 @@ class Dataset(data.Dataset):
         #y = torch.load(self.direc + "rbc_data.pt")[self.mid:(self.mid+self.output_length)]
         return x.float(), y.float()
     
-def train_epoch(train_loader, model, optimizer, loss_function, coef = 0, regularizer = None):
+def train_epoch(train_loader, model, optimizer, loss_function, device, coef = 0, regularizer = None):
     train_mse = []
     for xx, yy in train_loader:
         loss = 0
@@ -72,7 +72,7 @@ def train_epoch(train_loader, model, optimizer, loss_function, coef = 0, regular
     train_mse = round(np.sqrt(np.mean(train_mse)),5)
     return train_mse
 
-def eval_epoch(valid_loader, model, loss_function):
+def eval_epoch(valid_loader, model, loss_function, device):
     valid_mse = []
     preds = []
     trues = []
@@ -99,7 +99,7 @@ def eval_epoch(valid_loader, model, loss_function):
         valid_mse = round(np.sqrt(np.mean(valid_mse)), 5)
     return valid_mse, preds, trues
 
-def test_epoch(test_loader, model, loss_function):
+def test_epoch(test_loader, model, loss_function, device):
     valid_mse = []
     preds = []
     trues = []
