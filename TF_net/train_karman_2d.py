@@ -11,7 +11,7 @@ import re
 import random
 import time
 from torch.autograd import Variable
-#device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 import warnings
 import kornia
 warnings.filterwarnings("ignore")
@@ -31,9 +31,9 @@ class Dataset(data.Dataset):
     def __getitem__(self, index):
         ID = self.list_IDs[index]
         try:
-            loaded_tensor = torch.load(self.direc + f"samples_{ID}.pt")
+            loaded_tensor = torch.load(self.direc + f"rbc_data{ID}.pt")
         except Exception as ex:
-            print("There's an exception occurring when loading {}: {}".format(f'samples_{ID}.pt', str(ex)))
+            print("There's an exception occurring when loading {}: {}".format(f'rbc_data{ID}.pt', str(ex)))
         y = loaded_tensor[self.mid:(self.mid+self.output_length)]
         if self.stack_x:
             #x = torch.load(self.direc + str(ID) + ".pt")[(self.mid-self.input_length):self.mid].reshape(-1, y.shape[-2], y.shape[-1])
@@ -43,18 +43,22 @@ class Dataset(data.Dataset):
             x = loaded_tensor[(self.mid-self.input_length):self.mid]
         #y = torch.load(self.direc + str(ID) + ".pt")[self.mid:(self.mid+self.output_length)]
         #y = torch.load(self.direc + "rbc_data.pt")[self.mid:(self.mid+self.output_length)]
-        #print(f'x size: {x.size()}, y size: {y.size()}')
+        print(f'Shape of x: {x.shape}, shape of y: {y.shape}')
         return x.float(), y.float()
     
-def train_epoch(train_loader, model, optimizer, loss_function, device, coef = 0, regularizer = None):
+def train_epoch(train_loader, model, optimizer, loss_function, coef = 0, regularizer = None):
     train_mse = []
-    for xx, yy in train_loader:
+    # If using the dataloader directly from load_data
+    #for xx, yy in train_loader:
+    for d in train_loader:
+        xx = d.node_feature["n0"]
+        yy = d.node_label["n0"]
         loss = 0
         ims = []
         xx = xx.to(device)
         yy = yy.to(device)
-        #print('xx shape: ', xx.shape)
-        #print('yy shape after transpose: ', yy.transpose(0,1).shape) 
+        print('xx shape: ', xx.shape)
+        print('yy shape after transpose: ', yy.transpose(0,1).shape) 
         for y in yy.transpose(0,1):
             im = model(xx)
             xx = torch.cat([xx[:, 2:], im], 1)
@@ -73,12 +77,15 @@ def train_epoch(train_loader, model, optimizer, loss_function, device, coef = 0,
     train_mse = round(np.sqrt(np.mean(train_mse)),5)
     return train_mse
 
-def eval_epoch(valid_loader, model, loss_function, device):
+def eval_epoch(valid_loader, model, loss_function):
     valid_mse = []
     preds = []
     trues = []
     with torch.no_grad():
-        for xx, yy in valid_loader:
+        #for xx, yy in valid_loader:
+        for d in valid_loader:
+            xx = d.node_feature["n0"]
+            yy = d.node_label["n0"]
             loss = 0
             xx = xx.to(device)
             yy = yy.to(device)
@@ -100,13 +107,16 @@ def eval_epoch(valid_loader, model, loss_function, device):
         valid_mse = round(np.sqrt(np.mean(valid_mse)), 5)
     return valid_mse, preds, trues
 
-def test_epoch(test_loader, model, loss_function, device):
+def test_epoch(test_loader, model, loss_function):
     valid_mse = []
     preds = []
     trues = []
     with torch.no_grad():
         loss_curve = []
-        for xx, yy in test_loader:
+        #for xx, yy in test_loader:
+        for d in test_loader:
+            xx = d.node_feature["n0"]
+            yy = d.node_label["n0"]
             xx = xx.to(device)
             yy = yy.to(device)
             
