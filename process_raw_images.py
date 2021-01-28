@@ -109,24 +109,24 @@ elif args.process == 'original':
     assert(len(region_images[0]) == 2000)
 
     # Stack and save the stacked images to get (t, 2, 64, 64)
+    # So the sliding window is along the TIME dimension. You move one step at a time, for a stack size t
+    # e.g. if t=5, then we would have (0-4), (1-5), (2-6), so on. NOT (0-4), (5-9), etc.
+    # So the number of samples is 2000 - t + 1
     print(f'Num regions: {len(region_images)}')
     img_name = 0
     for key in region_images:
-        num_images = int(len(region_images[key]) / args.stack_size)
-        print('number of stacked images in region: ', num_images)
-        idx = 0
-        for j in tqdm(range(num_images)):
+        for j in tqdm(range(2000)):
             #print(f'stacking index: {idx}')
-            if len(region_images[key]) - (idx+args.stack_size) < 0:
+            if j + args.stack_size >= 2000:
+                # Cannot make another window
                 break
-            assert(len(region_images[key][idx:idx+args.stack_size]) == args.stack_size)
-            result = torch.cat(region_images[key][idx:idx+args.stack_size], dim=0)
+            assert(len(region_images[key][j:j+args.stack_size]) == args.stack_size)
+            result = torch.cat(region_images[key][j:j+args.stack_size], dim=0)
             assert(result.shape == (args.stack_size, 2, 64, 64))
             print('Save name: '+ new_path+f'samples_{img_name}.pt')
             torch.save(result.clone(), new_path+f'samples_{img_name}.pt')
-            idx += args.stack_size
             img_name += 1
-    print(f'Completed processing a total of {num_images} samples')
+    print(f'Completed processing a total of {img_name} samples')
 else:
     new_path = path+'stacked/'
     Path(new_path).mkdir(parents=True, exist_ok=True)

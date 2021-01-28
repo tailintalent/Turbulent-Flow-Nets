@@ -106,13 +106,14 @@ def test_epoch(test_loader, model, loss_function, device):
     trues = []
     with torch.no_grad():
         loss_curve = []
+        print(f'number of examples in loader: {len(test_loader)}')
         for xx, yy in test_loader:
             xx = xx.to(device)
             yy = yy.to(device)
             
             loss = 0
             ims = []
-
+            print(f'yy shape: {yy.shape}')
             for y in yy.transpose(0,1):
                 im = model(xx)
                 xx = torch.cat([xx[:, 2:], im], 1)
@@ -129,7 +130,7 @@ def test_epoch(test_loader, model, loss_function, device):
 
         preds = np.concatenate(preds, axis = 0)  
         trues = np.concatenate(trues, axis = 0)
-        
+        print(f'number of elements in loss curve: {len(loss_curve)}') 
         valid_mse = round(np.mean(valid_mse), 5)
         loss_curve = np.array(loss_curve).reshape(-1,60)
         loss_curve = np.sqrt(np.mean(loss_curve, axis = 0))

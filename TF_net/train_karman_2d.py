@@ -49,10 +49,10 @@ class Dataset(data.Dataset):
 def train_epoch(train_loader, model, optimizer, loss_function, coef = 0, regularizer = None):
     train_mse = []
     # If using the dataloader directly from load_data
-    #for xx, yy in train_loader:
-    for d in train_loader:
-        xx = d.node_feature["n0"]
-        yy = d.node_label["n0"]
+    for xx, yy in train_loader:
+    #for d in train_loader:
+        #xx = d.node_feature["n0"]
+        #yy = d.node_label["n0"]
         loss = 0
         ims = []
         xx = xx.to(device)
@@ -82,10 +82,10 @@ def eval_epoch(valid_loader, model, loss_function):
     preds = []
     trues = []
     with torch.no_grad():
-        #for xx, yy in valid_loader:
-        for d in valid_loader:
-            xx = d.node_feature["n0"]
-            yy = d.node_label["n0"]
+        for xx, yy in valid_loader:
+        #for d in valid_loader:
+            #xx = d.node_feature["n0"]
+            #yy = d.node_label["n0"]
             loss = 0
             xx = xx.to(device)
             yy = yy.to(device)
@@ -113,10 +113,10 @@ def test_epoch(test_loader, model, loss_function):
     trues = []
     with torch.no_grad():
         loss_curve = []
-        #for xx, yy in test_loader:
-        for d in test_loader:
-            xx = d.node_feature["n0"]
-            yy = d.node_label["n0"]
+        for xx, yy in test_loader:
+        #for d in test_loader:
+            #xx = d.node_feature["n0"]
+            #yy = d.node_label["n0"]
             xx = xx.to(device)
             yy = yy.to(device)
             

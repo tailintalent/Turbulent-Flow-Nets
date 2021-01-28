@@ -49,13 +49,13 @@ kernel_size = 3
 batch_size = 32
 
 #train_indices = list(range(0, 6000))
-train_indices = list(range(0, 200))
+train_indices = list(range(0, 10000))
 #train_indices = [1]
 #valid_indices = list(range(6000, 7700))
-valid_indices = list(range(200, 230))
+valid_indices = list(range(10000, 11790))
 #valid_indices = [2]
 #test_indices = [3]
-test_indices = list(range(230, 265))
+test_indices = list(range(11790, 13580))
 #test_indices = list(range(7700, 9800))
 
 model = LES(input_channels = input_length*2, output_channels = 2, kernel_size = kernel_size, 
