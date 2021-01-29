@@ -17,13 +17,14 @@ import kornia
 warnings.filterwarnings("ignore")
 
 class Dataset(data.Dataset):
-    def __init__(self, indices, input_length, mid, output_length, direc, stack_x):
+    def __init__(self, indices, input_length, mid, output_length, direc, stack_x, transform=None):
         self.input_length = input_length
         self.mid = mid
         self.output_length = output_length
         self.stack_x = stack_x
         self.direc = direc
         self.list_IDs = indices
+        self.transform = transform
         
     def __len__(self):
         return len(self.list_IDs)
@@ -34,6 +35,11 @@ class Dataset(data.Dataset):
             loaded_tensor = torch.load(self.direc + f"samples_{ID}.pt")
         except Exception as ex:
             print("There's an exception occurring when loading {}: {}".format(f'samples_{ID}.pt', str(ex)))
+        
+        if self.transform is not None:
+            loaded_tensor = self.transform(loaded_tensor)
+            # Normalize label as well
+
         y = loaded_tensor[self.mid:(self.mid+self.output_length)]
         if self.stack_x:
             #x = torch.load(self.direc + str(ID) + ".pt")[(self.mid-self.input_length):self.mid].reshape(-1, y.shape[-2], y.shape[-1])
@@ -41,9 +47,9 @@ class Dataset(data.Dataset):
         else:
             #x = torch.load(self.direc + str(ID) + ".pt")[(self.mid-self.input_length):self.mid]
             x = loaded_tensor[(self.mid-self.input_length):self.mid]
+        
         #y = torch.load(self.direc + str(ID) + ".pt")[self.mid:(self.mid+self.output_length)]
         #y = torch.load(self.direc + "rbc_data.pt")[self.mid:(self.mid+self.output_length)]
-        #print(f'x size: {x.size()}, y size: {y.size()}')
         return x.float(), y.float()
     
 def train_epoch(train_loader, model, optimizer, loss_function, device, coef = 0, regularizer = None):
@@ -106,7 +112,7 @@ def test_epoch(test_loader, model, loss_function, device):
     trues = []
     with torch.no_grad():
         loss_curve = []
-        print(f'number of examples in loader: {len(test_loader)}')
+        print(f'number of examples in test loader: {len(test_loader)}')
         for xx, yy in test_loader:
             xx = xx.to(device)
             yy = yy.to(device)

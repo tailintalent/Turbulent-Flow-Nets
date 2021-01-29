@@ -11,6 +11,11 @@ path = './TF_net/Data/'
 region_shape =256
 downsample_shape=64
 
+# Normalize data!
+# These are the original parameters, from the Eval notebook
+AVG = 1.0424337
+STDS = 4522.7046
+
 parser = argparse.ArgumentParser(description='Takes the raw velocity field images and downsamples them into 64x64 images')
 parser.add_argument('--start', type=int, dest='start', default=0, help='Start index of number of image to use')
 parser.add_argument('--end', type=int, dest='end', default=2000, help='End index of number of image to use')

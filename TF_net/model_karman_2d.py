@@ -80,6 +80,7 @@ class LES(nn.Module):
         # u_prime
         u_prime = (xx - u_tilde)[:,(xx_len - self.input_channels):]
         # u_mean
+        print(f'in foward, u_tilde: {u_tilde.shape}')
         u_tilde2 = u_tilde.reshape(u_tilde.shape[0], u_tilde.shape[1]//2, 2, 6, 2)
         #u_tilde2 = u_tilde.reshape(u_tilde.shape[0], u_tilde.shape[1]//2, 2, 64, 64)
         u_mean = []
