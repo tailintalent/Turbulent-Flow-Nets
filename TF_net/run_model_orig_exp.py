@@ -28,7 +28,7 @@ parser.add_argument('--result_name', type=str, dest='result_name', default='resu
 parser.add_argument('--gpu', type=int, dest='gpu', default=0, help='GPU ID to use')
 parser.add_argument('--num_workers', type=int, dest='num_workers', default=8, help='Number of worker processes to use to load data')
 parser.add_argument('--dir', type=str, dest='dir', default='./TF_net/Data/samples/', help='directory where the data is')
-parser.add_argument('--orig_norm', action='store_true', help='Indicate to use the original mean and std from the paper to normalize with'
+parser.add_argument('--orig_norm', action='store_true', help='Indicate to use the original mean and std from the paper to normalize with')
 parser.add_argument('--test', action='store_true', help='Just load a saved model to test')
 args = parser.parse_args()
 
@@ -43,7 +43,7 @@ train_direc = './TF_net/Data/samples/'
 test_direc = './TF_net/Data/samples/'
 
 ORIG_AVG = 1.0424337
-ORIG_STDS = 4522.7046
+ORIG_STD = 4522.7046
 
 # Normalize the images!! Get the per-channel mean and std for training images and use that to normalize all images (remember z = (x - mean) / std)
 def get_train_avg_std(train_indices):
