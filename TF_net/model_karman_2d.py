@@ -75,24 +75,30 @@ class LES(nn.Module):
         print(f'in forward,  xx shape: {xx.shape}')
         xx_len = xx.shape[1]
         # u = u_mean + u_tilde + u_prime
-        u_tilde = self.spatial_filter(xx.reshape(xx.shape[0]*xx.shape[1], 1, 256*128, 2)).reshape(xx.shape[0], xx.shape[1], 256*128, 2)
+        u_tilde = self.spatial_filter(xx.reshape(xx.shape[0]*xx.shape[1], 1, 256, 128)).reshape(xx.shape[0], xx.shape[1], 256, 128)
         #u_tilde = self.spatial_filter(xx.reshape(xx.shape[0]*xx.shape[1], 1, 64, 64)).reshape(xx.shape[0], xx.shape[1], 64, 64)
+        print(f'in forward, u_tilde shape:{u_tilde.shape}')
         # u_prime
         u_prime = (xx - u_tilde)[:,(xx_len - self.input_channels):]
         # u_mean
-        print(f'in foward, u_tilde: {u_tilde.shape}')
-        u_tilde2 = u_tilde.reshape(u_tilde.shape[0], u_tilde.shape[1]//2, 2, 256*128, 2)
+        u_tilde2 = u_tilde.reshape(u_tilde.shape[0], u_tilde.shape[1]//2, 2,256, 128)
         #u_tilde2 = u_tilde.reshape(u_tilde.shape[0], u_tilde.shape[1]//2, 2, 64, 64)
+        print(f'u_tilde2 shape {u_tilde2.shape}')
+        print(f'range: {xx_len//2 - self.input_channels//2} to  {xx_len//2}')
         u_mean = []
         for i in range(xx_len//2 - self.input_channels//2, xx_len//2):
+            #print(f'current i: {i}')
             cur_mean = torch.cat([self.temporal_filter(u_tilde2[:,i-self.time_range+1:i+1,0,:,:]).unsqueeze(2), 
                                   self.temporal_filter(u_tilde2[:,i-self.time_range+1:i+1,1,:,:]).unsqueeze(2)], dim = 2)
             u_mean.append(cur_mean)
         u_mean = torch.cat(u_mean, dim = 1)
-        u_mean = u_mean.reshape(u_mean.shape[0], -1, 256*128, 2)
+        u_mean = u_mean.reshape(u_mean.shape[0], -1, 256, 128)
+        print(f'u_mean shape: {u_mean.shape}')
         #u_mean = u_mean.reshape(u_mean.shape[0], -1, 64, 64)
         # u_tilde
-        u_tilde = u_tilde[:,(self.time_range-1)*2:] - u_mean
+        print(f'utilde_shape: {u_tilde[:,(self.time_range-1)*2:].shape}')
+        #u_tilde = u_tilde[:,(self.time_range-1)*2:] - u_mean
+        u_tilde = u_tilde[:,(self.time_range-1)*2:(self.time_range-1)*2+u_mean.shape[1]] - u_mean
         out_conv1_mean, out_conv2_mean, out_conv3_mean, out_conv4_mean = self.encoder1(u_mean)
         out_conv1_tilde, out_conv2_tilde, out_conv3_tilde, out_conv4_tilde = self.encoder2(u_tilde)
         out_conv1_prime, out_conv2_prime, out_conv3_prime, out_conv4_prime = self.encoder3(u_prime)

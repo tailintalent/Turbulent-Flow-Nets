@@ -17,12 +17,14 @@ import kornia
 warnings.filterwarnings("ignore")
 
 class Dataset(data.Dataset):
-    def __init__(self, indices, input_length, mid, output_length, direc, stack_x):
+    def __init__(self, input_length, mid, output_length, indices, dataset, stack_x):
         self.input_length = input_length
         self.mid = mid
         self.output_length = output_length
         self.stack_x = stack_x
-        self.direc = direc
+        #self.direc = direc
+        # Dataset from load_data ("ks1.2" or 'karman-2d')
+        self.dataset = dataset
         self.list_IDs = indices
         
     def __len__(self):
@@ -30,20 +32,37 @@ class Dataset(data.Dataset):
 
     def __getitem__(self, index):
         ID = self.list_IDs[index]
+        # Time needs to be the first dimension!
         try:
-            loaded_tensor = torch.load(self.direc + f"rbc_data{ID}.pt")
+            # There is only one node type: "n0"
+            node_feature = self.dataset[ID].node_feature['n0']
+            #node_label = self.dataset[ID].node_label['n0'].reshape(*dict(self.dataset[ID].original_shape)["n0"], *self.dataset[ID].node_label["n0"].shape[-2:])
+            # Feature size is 2 (the node_label['n0'].shape[-2])
+            node_label = self.dataset[ID].node_label['n0'].reshape(self.dataset[ID].node_label["n0"].shape[-2], 
+                                                                   self.dataset[ID].node_label["n0"].shape[-1], 
+                                                                   *dict(self.dataset[ID].original_shape)["n0"])
         except Exception as ex:
-            print("There's an exception occurring when loading {}: {}".format(f'rbc_data{ID}.pt', str(ex)))
-        y = loaded_tensor[self.mid:(self.mid+self.output_length)]
+            print("There's an exception occurring when extracting graph features: {}".format(str(ex)))
+        #y = loaded_tensor[self.mid:(self.mid+self.output_length)]
         if self.stack_x:
-            #x = torch.load(self.direc + str(ID) + ".pt")[(self.mid-self.input_length):self.mid].reshape(-1, y.shape[-2], y.shape[-1])
-            x = loaded_tensor[(self.mid-self.input_length):self.mid].reshape(-1, y.shape[-2], y.shape[-1])
+            #x = node_feature.reshape(self.dataset[ID].node_feature["n0"].shape[-2], *dict(self.dataset[ID].original_shape)["n0"], self.dataset[ID].node_feature["n0"].shape[-1])
+            #x = x[(self.mid-self.input_length):self.mid]
+            #x = node_feature.reshape(-1, *dict(self.dataset[ID].original_shape)["n0"], *self.dataset[ID].node_feature["n0"].shape[-2:])
+            x = node_feature.reshape(-1, node_label.shape[-2], node_label.shape[-1])
+            #x = node_feature[(self.mid-self.input_length):self.mid].reshape(-1, node_feature.shape[-2], node_feature.shape[-1])
         else:
             #x = torch.load(self.direc + str(ID) + ".pt")[(self.mid-self.input_length):self.mid]
-            x = loaded_tensor[(self.mid-self.input_length):self.mid]
+            #x = loaded_tensor[(self.mid-self.input_length):self.mid]
+            # Original shape of the data:  (('n0', (256, 128)),)
+            # Node feature shape: torch.Size([32768, 6, 2])
+            #node_feature = node_feature.reshape(*dict(self.dataset[ID].original_shape)["n0"], *self.dataset[ID].node_feature["n0"].shape[-2:])
+            x = node_feature
+        # Node label is already steps to the future
+        #y = node_label[self.mid:(self.mid+self.output_length)]
+        y = node_label
         #y = torch.load(self.direc + str(ID) + ".pt")[self.mid:(self.mid+self.output_length)]
         #y = torch.load(self.direc + "rbc_data.pt")[self.mid:(self.mid+self.output_length)]
-        print(f'Shape of x: {x.shape}, shape of y: {y.shape}')
+        #print(f'Shape of x: {x.shape}, shape of y: {y.shape}')
         return x.float(), y.float()
     
 def train_epoch(train_loader, model, optimizer, loss_function, coef = 0, regularizer = None):

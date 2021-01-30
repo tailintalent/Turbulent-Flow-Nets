@@ -136,6 +136,15 @@ if not args.test:
 
     if not save:
         torch.save(model, f"./checkpoints/{args.model_name}.pth")
+else:
+    # Create Normalization transform
+    if args.orig_norm:
+        trans_func = transforms.Compose([transforms.Normalize(mean=[ORIG_AVG, ORIG_AVG], std=[ORIG_STD, ORIG_STD])])
+    else:
+        chan1_mean, chan1_std, chan2_mean, chan2_std = get_train_avg_std(train_indices)
+        print(f'channel 0 mean {chan1_mean} and std: {chan1_std}')
+        print(f'channel 1 mean {chan2_mean} and std: {chan2_std}')
+        trans_func = transforms.Compose([transforms.Normalize(mean=[chan1_mean, chan2_mean], std=[chan1_std, chan2_std])])
 
 loss_fun = torch.nn.MSELoss()
 best_model = torch.load(f"./checkpoints/{args.model_name}.pth")
@@ -146,4 +155,5 @@ preds, trues, loss_curve = test_epoch(test_loader, best_model, loss_fun, device)
 torch.save({"preds": preds,
             "trues": trues,
             "loss_curve": loss_curve}, 
-            f"./Evaluation/{args.result_name}.pt")
+            f"./Evaluation/{args.result_name}.pt",
+            pickle_protocol=4)
