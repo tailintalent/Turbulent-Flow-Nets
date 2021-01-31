@@ -33,6 +33,7 @@ class Dataset(data.Dataset):
     def __getitem__(self, index):
         ID = self.list_IDs[index]
         # Time needs to be the first dimension!
+        # Original data shape: (time range, image channels <2>, image width, image height)
         try:
             # There is only one node type: "n0"
             node_feature = self.dataset[ID].node_feature['n0']
@@ -160,6 +161,7 @@ def test_epoch(test_loader, model, loss_function):
         trues = np.concatenate(trues, axis = 0)
         
         valid_mse = round(np.mean(valid_mse), 5)
-        loss_curve = np.array(loss_curve).reshape(-1,60)
+        loss_curve = np.array(loss_curve).reshape(-1,4)
+        #loss_curve = np.array(loss_curve).reshape(-1,60)
         loss_curve = np.sqrt(np.mean(loss_curve, axis = 0))
     return preds, trues, loss_curve
