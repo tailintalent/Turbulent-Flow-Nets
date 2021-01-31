@@ -71,9 +71,9 @@ class LES(nn.Module):
     def forward(self, xx):
         # Currently, karman-2d xx has shape torch.Size([32, 1, 256, 128, 6, 2])
         # For reference, yy has shape torch.Size([32, 32768, 4, 2])
-        # TODO: reshape this accordingly
         #print(f'in forward,  xx shape: {xx.shape}')
         xx_len = xx.shape[1]
+        #print(f'xx_len: {xx_len}')
         # u = u_mean + u_tilde + u_prime
         u_tilde = self.spatial_filter(xx.reshape(xx.shape[0]*xx.shape[1], 1, 256, 128)).reshape(xx.shape[0], xx.shape[1], 256, 128)
         #u_tilde = self.spatial_filter(xx.reshape(xx.shape[0]*xx.shape[1], 1, 64, 64)).reshape(xx.shape[0], xx.shape[1], 64, 64)
