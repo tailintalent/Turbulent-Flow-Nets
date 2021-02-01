@@ -36,10 +36,11 @@ class Dataset(data.Dataset):
         # Original data shape: (time range, image channels <2>, image width, image height)
         try:
             # There is only one node type: "n0"
-            node_feature = self.dataset[ID].node_feature['n0']
-            #node_label = self.dataset[ID].node_label['n0'].reshape(*dict(self.dataset[ID].original_shape)["n0"], *self.dataset[ID].node_label["n0"].shape[-2:])
+            # Need to first unpack the original shapes for the features and labels, then permute the dimensions instead of reshape to maintain order
+            node_feature = self.dataset[ID].node_feature['n0'].reshape(*dict(self.dataset[ID].original_shape)["n0"], *self.dataset[ID].node_feature["n0"].shape[-2:])  # shape of [height, width, time_steps, feature_size]
+            node_feature = node_feature.permute(2, 3, 0, 1)
             # Feature size is 2 (the node_label['n0'].shape[-2])
-            node_label = self.dataset[ID].node_label['n0'].reshape( *dict(self.dataset[ID].original_shape)["n0"], *self.dataset[ID].node_label["n0"].shape[-2:])  # shape of [height, width, time_steps, feature_size]
+            node_label = self.dataset[ID].node_label['n0'].reshape(*dict(self.dataset[ID].original_shape)["n0"], *self.dataset[ID].node_label["n0"].shape[-2:])  # shape of [height, width, time_steps, feature_size]
             node_label = node_label.permute(2, 3, 0, 1)
             #node_label = self.dataset[ID].node_label['n0'].reshape(self.dataset[ID].node_label["n0"].shape[-2], 
             #                                                       self.dataset[ID].node_label["n0"].shape[-1], 
@@ -50,6 +51,7 @@ class Dataset(data.Dataset):
         if self.stack_x:
             #x = node_feature.reshape(self.dataset[ID].node_feature["n0"].shape[-2], *dict(self.dataset[ID].original_shape)["n0"], self.dataset[ID].node_feature["n0"].shape[-1])
             #x = node_feature.reshape(-1, *dict(self.dataset[ID].original_shape)["n0"], *self.dataset[ID].node_feature["n0"].shape[-2:])
+            # x becomes three dims: (time_steps * num_channels, img width, img height)
             x = node_feature.reshape(-1, node_label.shape[-2], node_label.shape[-1])
             #x = node_feature[(self.mid-self.input_length):self.mid].reshape(-1, node_feature.shape[-2], node_feature.shape[-1])
         else:
@@ -68,9 +70,6 @@ def train_epoch(train_loader, model, optimizer, loss_function, coef = 0, regular
     train_mse = []
     # If using the dataloader directly from load_data
     for xx, yy in train_loader:
-    #for d in train_loader:
-        #xx = d.node_feature["n0"]
-        #yy = d.node_label["n0"]
         loss = 0
         ims = []
         xx = xx.to(device)
@@ -99,9 +98,6 @@ def eval_epoch(valid_loader, model, loss_function):
     trues = []
     with torch.no_grad():
         for xx, yy in valid_loader:
-        #for d in valid_loader:
-            #xx = d.node_feature["n0"]
-            #yy = d.node_label["n0"]
             loss = 0
             xx = xx.to(device)
             yy = yy.to(device)
@@ -130,9 +126,6 @@ def test_epoch(test_loader, model, loss_function, pred_steps):
     with torch.no_grad():
         loss_curve = []
         for xx, yy in test_loader:
-        #for d in test_loader:
-            #xx = d.node_feature["n0"]
-            #yy = d.node_label["n0"]
             xx = xx.to(device)
             yy = yy.to(device)
             

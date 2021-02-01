@@ -69,8 +69,6 @@ class LES(nn.Module):
                                       padding=(kernel_size - 1) // 2)
         
     def forward(self, xx):
-        # Currently, karman-2d xx has shape torch.Size([32, 1, 256, 128, 6, 2])
-        # For reference, yy has shape torch.Size([32, 32768, 4, 2])
         #print(f'in forward,  xx shape: {xx.shape}')
         xx_len = xx.shape[1]
         #print(f'xx_len: {xx_len}')
@@ -88,6 +86,7 @@ class LES(nn.Module):
         u_mean = []
         for i in range(xx_len//2 - self.input_channels//2, xx_len//2):
             #print(f'current i: {i}')
+            #print(f'inputted shape: {u_tilde2[:,i-self.time_range+1:i+1,0,:,:].shape}')
             cur_mean = torch.cat([self.temporal_filter(u_tilde2[:,i-self.time_range+1:i+1,0,:,:]).unsqueeze(2), 
                                   self.temporal_filter(u_tilde2[:,i-self.time_range+1:i+1,1,:,:]).unsqueeze(2)], dim = 2)
             u_mean.append(cur_mean)
