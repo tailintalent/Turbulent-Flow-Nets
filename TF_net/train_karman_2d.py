@@ -71,7 +71,7 @@ class Dataset(data.Dataset):
             x = node_feature
         # Node label is already steps to the future
         if node_label.shape[0] > self.output_length:
-            node_label = node_label[-self.output_length:, :, :, :]
+            node_label = node_label[:self.output_length, :, :, :]
         #y = node_label[self.mid:(self.mid+self.output_length)]
         y = node_label
         #print(f'Shape of x: {x.shape}, shape of y: {y.shape}')
