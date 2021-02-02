@@ -18,13 +18,20 @@ warnings.filterwarnings("ignore")
 
 class Dataset(data.Dataset):
     def __init__(self, input_length, mid, output_length, indices, dataset, stack_x):
+        # Time steps to use for node feature
         self.input_length = input_length
+
+        # Originally supposed to indicate the starting time step given an example with time range > mid
+        # For the original img data, mid is the middle time step, to get previous time steps for feature and future time steps for label
         self.mid = mid
+
+        # Time steps for future, for node label
         self.output_length = output_length
         self.stack_x = stack_x
         #self.direc = direc
         # Dataset from load_data ("ks1.2" or 'karman-2d')
         self.dataset = dataset
+        # Example IDs
         self.list_IDs = indices
         
     def __len__(self):
@@ -49,6 +56,8 @@ class Dataset(data.Dataset):
             print("There's an exception occurring when extracting graph features: {}".format(str(ex)))
         #y = loaded_tensor[self.mid:(self.mid+self.output_length)]
         if self.stack_x:
+            if node_feature.shape[0] > self.input_length:
+                node_feature = node_feature[-self.input_length:,:,:,:]
             #x = node_feature.reshape(self.dataset[ID].node_feature["n0"].shape[-2], *dict(self.dataset[ID].original_shape)["n0"], self.dataset[ID].node_feature["n0"].shape[-1])
             #x = node_feature.reshape(-1, *dict(self.dataset[ID].original_shape)["n0"], *self.dataset[ID].node_feature["n0"].shape[-2:])
             # x becomes three dims: (time_steps * num_channels, img width, img height)
@@ -61,6 +70,8 @@ class Dataset(data.Dataset):
             #node_feature = node_feature.reshape(*dict(self.dataset[ID].original_shape)["n0"], *self.dataset[ID].node_feature["n0"].shape[-2:])
             x = node_feature
         # Node label is already steps to the future
+        if node_label.shape[0] > self.output_length:
+            node_label = node_label[-self.output_length:, :, :, :]
         #y = node_label[self.mid:(self.mid+self.output_length)]
         y = node_label
         #print(f'Shape of x: {x.shape}, shape of y: {y.shape}')
